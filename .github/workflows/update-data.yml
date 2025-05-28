@@ -1,0 +1,117 @@
+# .github/workflows/update-data.yml
+name: 🎮 Update Forn Fire Data
+
+on:
+  repository_dispatch:
+    types: [update-game-data]
+  workflow_dispatch:
+    inputs:
+      players:
+        description: 'Players data (JSON)'
+        required: false
+        default: '[]'
+      stats:
+        description: 'Game stats (JSON)'
+        required: false
+        default: '{}'
+
+jobs:
+  update-game-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 📁 Create data directory
+      run: mkdir -p data
+      
+    - name: 🎮 Process game data
+      run: |
+        # Obtener datos de la entrada
+        PLAYERS_DATA='${{ github.event.client_payload.players || github.event.inputs.players || "[]" }}'
+        STATS_DATA='${{ github.event.client_payload.stats || github.event.inputs.stats || "{}" }}'
+        
+        # Crear timestamp
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        
+        # Crear archivo de datos del juego
+        cat > data/game-data.json << EOF
+        {
+          "players": $PLAYERS_DATA,
+          "stats": $STATS_DATA,
+          "server": {
+            "status": "online",
+            "lastUpdate": "$TIMESTAMP",
+            "uptime": $(date +%s)000
+          },
+          "meta": {
+            "version": "2.1.0",
+            "developer": "MaxVixioHack",
+            "game": "Forn Fire",
+            "timestamp": "$TIMESTAMP"
+          }
+        }
+        EOF
+        
+        # Crear archivo de estadísticas históricas
+        cat > data/stats-history.json << EOF
+        {
+          "lastUpdate": "$TIMESTAMP",
+          "totalUpdates": ${{ github.run_number }},
+          "playersOnline": $(echo '$STATS_DATA' | jq -r '.playersOnline // 0'),
+          "totalKills": $(echo '$STATS_DATA' | jq -r '.totalKills // 0'),
+          "activeMatches": $(echo '$STATS_DATA' | jq -r '.activeMatches // 0')
+        }
+        EOF
+        
+        # Log de la actualización
+        echo "🎯 Datos actualizados: $TIMESTAMP"
+        echo "👥 Jugadores: $(echo '$PLAYERS_DATA' | jq length)"
+        echo "📊 Stats: $STATS_DATA"
+        
+    - name: 📝 Update README with latest stats
+      run: |
+        # Obtener estadísticas
+        PLAYERS_COUNT=$(cat data/game-data.json | jq '.players | length')
+        TOTAL_KILLS=$(cat data/game-data.json | jq -r '.stats.totalKills // 0')
+        LAST_UPDATE=$(cat data/game-data.json | jq -r '.server.lastUpdate')
+        
+        # Crear badge de estado
+        echo "![Players Online](https://img.shields.io/badge/Players%20Online-$PLAYERS_COUNT-brightgreen)" > data/status-badge.md
+        echo "![Total Kills](https://img.shields.io/badge/Total%20Kills-$TOTAL_KILLS-red)" >> data/status-badge.md
+        echo "![Last Update](https://img.shields.io/badge/Last%20Update-$(date -d "$LAST_UPDATE" +'%H:%M')-blue)" >> data/status-badge.md
+        
+    - name: 🚀 Commit and push changes
+      run: |
+        git config --local user.email "forn-fire-bot@maxviciohack.dev"
+        git config --local user.name "Forn Fire Bot 🎮"
+        
+        # Añadir archivos
+        git add data/
+        
+        # Verificar si hay cambios
+        if git diff --staged --quiet; then
+          echo "✅ No hay cambios que commitear"
+        else
+          # Crear mensaje de commit dinámico
+          PLAYERS_COUNT=$(cat data/game-data.json | jq '.players | length')
+          COMMIT_MSG="🎮 Game update: $PLAYERS_COUNT players online | $(date -u +'%H:%M UTC')"
+          
+          git commit -m "$COMMIT_MSG"
+          git push
+          echo "✅ Cambios pusheados exitosamente"
+        fi
+        
+    - name: 📊 Generate summary
+      run: |
+        echo "## 🎮 Forn Fire Update Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**📅 Timestamp:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+        echo "**👥 Players Online:** $(cat data/game-data.json | jq '.players | length')" >> $GITHUB_STEP_SUMMARY
+        echo "**💀 Total Kills:** $(cat data/game-data.json | jq -r '.stats.totalKills // 0')" >> $GITHUB_STEP_SUMMARY
+        echo "**🎯 Active Matches:** $(cat data/game-data.json | jq -r '.stats.activeMatches // 0')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🔥 Game Data Updated Successfully!" >> $GITHUB_STEP_SUMMARY
