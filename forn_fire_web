@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forn Fire - Panel de Administración</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d1810 50%, #1a1a1a 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, #ff6b35 0%, #ff8c42 50%, #ff6b35 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+            border-bottom: 2px solid #ff8c42;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header h1::before {
+            content: "🔥";
+            font-size: 3rem;
+            animation: flicker 2s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #ffcc99;
+            margin-top: 0.5rem;
+            font-weight: 300;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ffaa00;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0 2rem;
+            display: flex;
+            gap: 0;
+            border-bottom: 3px solid #ff6b35;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            background: linear-gradient(135deg, #333 0%, #444 100%);
+            color: #ccc;
+            border: none;
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-top: 3px solid transparent;
+            border-left: 1px solid #555;
+            border-right: 1px solid #555;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 150px;
+        }
+
+        .tab-button:first-child {
+            border-left: none;
+            border-top-left-radius: 8px;
+        }
+
+        .tab-button:last-child {
+            border-right: none;
+            border-top-right-radius: 8px;
+        }
+
+        .tab-button:hover {
+            background: linear-gradient(135deg, #444 0%, #555 100%);
+            color: #ff8c42;
+            transform: translateY(-2px);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: #ffffff;
+            border-top: 3px solid #ffcc99;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+            min-height: calc(100vh - 200px);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .card h3 {
+            color: #ff8c42;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        }
+
+        /* Buttons */
+        .btn {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #666 0%, #777 100%);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Data Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .data-table th {
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        /* Footer */
+        .footer {
+            background: rgba(0, 0, 0, 0.5);
+            text-align: center;
+            padding: 1rem;
+            border-top: 1px solid #333;
+            color: #999;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .status-bar {
+                padding: 1rem;
+            }
+            
+            .tab-button {
+                min-width: 120px;
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>FORN FIRE</h1>
+        <div class="subtitle">Panel de Administración BattleRoyal</div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot"></div>
+            <span>Servidor: Conectando...</span>
+        </div>
+        <div class="status-item">
+            <span>👥 Jugadores: 0/100</span>
+        </div>
+        <div class="status-item">
+            <span>🎮 Partidas: 0</span>
+        </div>
+        <div class="status-item">
+            <span>⏱️ Uptime: --</span>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+        <button class="tab-button active" onclick="showTab('dashboard')">📊 Dashboard</button>
+        <button class="tab-button" onclick="showTab('players')">👥 Jugadores</button>
+        <button class="tab-button" onclick="showTab('matches')">🎮 Partidas</button>
+        <button class="tab-button" onclick="showTab('weapons')">🔫 Armas</button>
+        <button class="tab-button" onclick="showTab('maps')">🗺️ Mapas</button>
+        <button class="tab-button" onclick="showTab('config')">⚙️ Config</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="grid">
+                <div class="card">
+                    <h3>🎯 Estado del Servidor</h3>
+                    <p><strong>Estado:</strong> <span style="color: #ffaa00;">Iniciando...</span></p>
+                    <p><strong>Uptime:</strong> --</p>
+                    <p><strong>CPU:</strong> --%</p>
+                    <p><strong>RAM:</strong> --%</p>
+                    <button class="btn">Reiniciar Servidor</button>
+                </div>
+                
+                <div class="card">
+                    <h3>📈 Estadísticas en Vivo</h3>
+                    <p><strong>Jugadores Conectados:</strong> 0</p>
+                    <p><strong>Partidas en Cola:</strong> 0</p>
+                    <p><strong>Partidas Activas:</strong> 0</p>
+                    <p><strong>Total Kills:</strong> 0</p>
+                </div>
+                
+                <div class="card">
+                    <h3>🔥 Actividad Reciente</h3>
+                    <p>• Panel web iniciado</p>
+                    <p>• Conectando con Roblox Studio...</p>
+                    <p>• Sistema de tiempo real activado</p>
+                    <p>• Esperando jugadores...</p>
+                </div>
+                
+                <div class="card">
+                    <h3>⚙️ Configuración Rápida</h3>
+                    <p><strong>Modo:</strong> BattleRoyal Cooperativo</p>
+                    <p><strong>Mapa:</strong> Forn Fire Main</p>
+                    <p><strong>Max Jugadores:</strong> 100</p>
+                    <button class="btn btn-secondary">Configurar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Players Tab -->
+        <div id="players" class="tab-content">
+            <div class="card">
+                <h3>👥 Gestión de Jugadores</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Jugador</th>
+                            <th>Estado</th>
+                            <th>Kills</th>
+                            <th>Tiempo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #999; padding: 2rem;">
+                                🔄 Esperando conexión con Roblox Studio...<br>
+                                <small>Los jugadores aparecerán aquí cuando se conecten</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Matches Tab -->
+        <div id="matches" class="tab-content">
+            <div class="grid grid-2">
+                <div class="card">
+                    <h3>🎮 Partidas Activas</h3>
+                    <p>🔄 Esperando datos del servidor...</p>
+                    <p><strong>Estado:</strong> Standby</p>
+                    <p><strong>Jugadores:</strong> 0/100</p>
+                    <button class="btn">Crear Nueva Partida</button>
+                </div>
+                
+                <div class="card">
+                    <h3>⏱️ Cola de Matchmaking</h3>
+                    <p><strong>Jugadores en Cola:</strong> 0</p>
+                    <p><strong>Tiempo Estimado:</strong> --</p>
+                    <p><strong>Próxima Partida:</strong> Esperando jugadores</p>
+                    <button class="btn btn-secondary">Ver Cola</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weapons Tab -->
+        <div id="weapons" class="tab-content">
+            <div class="card">
+                <h3>🔫 Sistema de Armas</h3>
+                <div class="grid">
+                    <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,107,53,0.2);">
+                        <h4 style="color: #ff8c42; margin-bottom: 0.5rem;">🔫 AR (Rifle de Asalto)</h4>
+                        <p><strong>Daño:</strong> 35</p>
+                        <p><strong>Rango:</strong> Alto</p>
+                        <p><strong>Estado:</strong> ✅ Activo</p>
+                        <button class="btn btn-secondary" style="margin-top: 0.5rem;">Configurar</button>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,107,53,0.2);">
+                        <h4 style="color: #ff8c42; margin-bottom: 0.5rem;">🚀 Rocket Launcher</h4>
+                        <p><strong>Daño:</strong> 100</p>
+                        <p><strong>Rango:</strong> Medio</p>
+                        <p><strong>Estado:</strong> ✅ Activo</p>
+                        <button class="btn btn-secondary" style="margin-top: 0.5rem;">Configurar</button>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; border: 1px solid rgba(255,107,53,0.2);">
+                        <h4 style="color: #ff8c42; margin-bottom: 0.5rem;">🏹 Bow Weapon</h4>
+                        <p><strong>Daño:</strong> 50</p>
+                        <p><strong>Rango:</strong> Medio</p>
+                        <p><strong>Estado:</strong> ✅ Activo</p>
+                        <button class="btn btn-secondary" style="margin-top: 0.5rem;">Configurar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Maps Tab -->
+        <div id="maps" class="tab-content">
+            <div class="card">
+                <h3>🗺️ Gestión de Mapas</h3>
+                <div class="grid">
+                    <div>
+                        <h4 style="color: #ff8c42;">🏟️ Mapa Actual: Forn Fire Main</h4>
+                        <p><strong>Elementos disponibles:</strong></p>
+                        <ul style="margin-left: 2rem; margin-top: 1rem; line-height: 1.6;">
+                            <li>🚗 <strong>Vehículos:</strong> Jeep disponible</li>
+                            <li>📦 <strong>Props:</strong> Múltiples cajas de loot</li>
+                            <li>🌳 <strong>Ambiente:</strong> Árboles y vegetación</li>
+                            <li>🏢 <strong>Estructuras:</strong> Edificios destructibles</li>
+                            <li>🎯 <strong>Spawns:</strong> Puntos de reaparición</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style="color: #ff8c42;">⚙️ Controles del Mapa</h4>
+                        <p style="margin-bottom: 1rem;">Gestiona los elementos del mundo de juego:</p>
+                        <button class="btn" style="margin: 0.25rem;">Recargar Mapa</button>
+                        <button class="btn btn-secondary" style="margin: 0.25rem;">Cambiar Mapa</button>
+                        <button class="btn btn-secondary" style="margin: 0.25rem;">Reset Props</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Config Tab -->
+        <div id="config" class="tab-content">
+            <div class="grid">
+                <div class="card">
+                    <h3>⚙️ Configuración del Juego</h3>
+                    <div style="line-height: 1.8;">
+                        <p><strong>Tipo de Juego:</strong> BattleRoyal Cooperativo</p>
+                        <p><strong>Máximo de Jugadores:</strong> 100</p>
+                        <p><strong>Tiempo de Partida:</strong> 20 minutos</p>
+                        <p><strong>Barrera Encogiente:</strong> ✅ Activa</p>
+                        <p><strong>Respawn:</strong> ✅ Habilitado</p>
+                        <p><strong>Friendly Fire:</strong> ❌ Deshabilitado</p>
+                    </div>
+                    <button class="btn" style="margin-top: 1rem;">Guardar Cambios</button>
+                </div>
+                
+                <div class="card">
+                    <h3>🔄 Conexión con Roblox</h3>
+                    <div style="line-height: 1.8;">
+                        <p><strong>Estado:</strong> <span style="color: #ffaa00;">Conectando...</span></p>
+                        <p><strong>Último Sync:</strong> --</p>
+                        <p><strong>Datos Sincronizados:</strong> -- KB</p>
+                        <p><strong>Servidor Roblox:</strong> Standby</p>
+                        <p><strong>WebSocket:</strong> Inicializando...</p>
+                    </div>
+                    <button class="btn" style="margin-top: 1rem;">Forzar Sincronización</button>
+                </div>
+
+                <div class="card">
+                    <h3>📊 Información del Sistema</h3>
+                    <div style="line-height: 1.8;">
+                        <p><strong>Versión Panel:</strong> v1.0.0</p>
+                        <p><strong>Desarrollador:</strong> MaxVixioHack</p>
+                        <p><strong>Asistente:</strong> ChuyMine</p>
+                        <p><strong>Fecha:</strong> Mayo 2025</p>
+                        <p><strong>GitHub:</strong> <a href="https://github.com/MaxVixioHack/forn_fire_web" style="color: #ff8c42;">Repositorio</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>&copy; 2025 Forn Fire - Desarrollado por MaxVixioHack con ChuyMine | Panel de Administración v1.0 | 
+        <a href="https://github.com/MaxVixioHack/forn_fire_web" style="color: #ff8c42;">GitHub</a></p>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Ocultar todos los contenidos de pestañas
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remover clase activa de todos los botones
+            const tabButtons = document.querySelectorAll('.tab-button');
+            tabButtons.forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Mostrar pestaña seleccionada y marcar botón como activo
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Simulación de datos en tiempo real
+        function simulateRealTimeData() {
+            // Simular contador de tiempo
+            let seconds = 0;
+            setInterval(() => {
+                seconds++;
+                const hours = Math.floor(seconds / 3600);
+                const minutes = Math.floor((seconds % 3600) / 60);
+                const secs = seconds % 60;
+                
+                const uptimeElement = document.querySelector('.status-bar .status-item:last-child span');
+                if (uptimeElement) {
+                    uptimeElement.textContent = `⏱️ Uptime: ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+            
+            // Simular cambios de estado
+            setTimeout(() => {
+                const statusElement = document.querySelector('.status-bar .status-item:first-child span');
+                if (statusElement) {
+                    statusElement.innerHTML = '<div class="status-dot" style="background: #00ff00;"></div>Servidor: Online';
+                }
+                
+                const serverCard = document.querySelector('#dashboard .card:first-child');
+                if (serverCard) {
+                    serverCard.innerHTML = `
+                        <h3>🎯 Estado del Servidor</h3>
+                        <p><strong>Estado:</strong> <span style="color: #00ff00;">Online</span></p>
+                        <p><strong>Uptime:</strong> ${Math.floor(Math.random() * 2) + 1}h ${Math.floor(Math.random() * 60)}m</p>
+                        <p><strong>CPU:</strong> ${Math.floor(Math.random() * 30) + 30}%</p>
+                        <p><strong>RAM:</strong> ${Math.floor(Math.random() * 40) + 40}%</p>
+                        <button class="btn">Reiniciar Servidor</button>
+                    `;
+                }
+            }, 3000);
+        }
+
+        // Mensaje de bienvenida
+        console.log('🔥 Forn Fire Web Panel iniciado');
+        console.log('📡 Esperando conexión con Roblox Studio...');
+        
+        // Inicializar simulación
+        simulateRealTimeData();
+        
+        // Mensaje de estado
+        setTimeout(() => {
+            console.log('✅ Panel web cargado correctamente');
+        }, 1000);
+    </script>
+</body>
+</html>
