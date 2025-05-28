@@ -673,3 +673,134 @@ window.viewQueue = () => window.webPanel?.viewQueue();
 console.log('📡 Forn Fire Real-time System cargado');
 console.log('🔥 Desarrollado por MaxVixioHack con ChuyMine');
 console.log('🎮 Proyecto: Forn Fire Battle Royale Panel v1.0.0');
+
+// 🎮 GitHub Data Reader - Forn Fire
+// Lee datos actualizados desde GitHub Actions
+
+class GitHubDataReader {
+    constructor() {
+        this.repoUrl = 'https://raw.githubusercontent.com/MaxVicioHack/forn_fire_web/main/data/game-data.json';
+        this.updateInterval = 15000; // 15 segundos
+        this.lastUpdate = null;
+        
+        console.log('🔄 GitHub Data Reader iniciado');
+        this.startReading();
+    }
+    
+    async fetchGameData() {
+        try {
+            console.log('📡 Obteniendo datos desde GitHub...');
+            
+            // Añadir timestamp para evitar cache
+            const url = this.repoUrl + '?t=' + Date.now();
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            // Verificar si los datos son más recientes
+            if (this.lastUpdate !== data.server.lastUpdate) {
+                this.lastUpdate = data.server.lastUpdate;
+                this.updateWebPanel(data);
+                console.log('✅ Datos actualizados desde GitHub:', new Date(data.server.lastUpdate));
+            }
+            
+            return data;
+            
+        } catch (error) {
+            console.error('❌ Error obteniendo datos de GitHub:', error);
+            return null;
+        }
+    }
+    
+    updateWebPanel(data) {
+        if (!window.webPanel) {
+            console.warn('⚠️ WebPanel no disponible aún');
+            return;
+        }
+        
+        // Actualizar estado del juego
+        if (window.webPanel.gameState) {
+            window.webPanel.gameState = {
+                ...window.webPanel.gameState,
+                players: data.players || [],
+                stats: data.stats || {},
+                server: {
+                    ...window.webPanel.gameState.server,
+                    ...data.server,
+                    status: 'online'
+                }
+            };
+            
+            // Actualizar paneles
+            window.webPanel.updateAllPanels();
+            
+            // Mostrar notificación de actualización
+            const playersCount = data.players ? data.players.length : 0;
+            const totalKills = data.stats ? data.stats.totalKills || 0 : 0;
+            
+            if (playersCount > 0 || totalKills > 0) {
+                window.webPanel.showNotification(
+                    `🎮 Datos actualizados: ${playersCount} jugadores, ${totalKills} kills`, 
+                    'success'
+                );
+            }
+        }
+    }
+    
+    startReading() {
+        // Primera lectura inmediata
+        this.fetchGameData();
+        
+        // Lectura periódica
+        setInterval(() => {
+            this.fetchGameData();
+        }, this.updateInterval);
+        
+        console.log(`🔄 Lectura automática cada ${this.updateInterval/1000} segundos`);
+    }
+    
+    // Función para forzar actualización
+    forceUpdate() {
+        console.log('🔄 Forzando actualización...');
+        return this.fetchGameData();
+    }
+}
+
+// Inicializar lector cuando el WebPanel esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    // Esperar a que WebPanel se inicialice
+    setTimeout(() => {
+        if (window.webPanel) {
+            window.githubReader = new GitHubDataReader();
+            
+            // Añadir función global para forzar actualización
+            window.forceGitHubUpdate = () => {
+                if (window.githubReader) {
+                    return window.githubReader.forceUpdate();
+                }
+            };
+            
+            console.log('🔗 GitHub Data Reader conectado al WebPanel');
+        } else {
+            console.warn('⚠️ WebPanel no encontrado, reintentando...');
+            setTimeout(arguments.callee, 2000);
+        }
+    }, 3000);
+});
+
+// Añadir indicador visual de GitHub
+setTimeout(() => {
+    if (document.querySelector('.header-info')) {
+        const githubIndicator = document.createElement('div');
+        githubIndicator.className = 'info-item';
+        githubIndicator.innerHTML = `
+            <span class="info-icon">📡</span>
+            <span>GitHub Live</span>
+        `;
+        document.querySelector('.header-info').appendChild(githubIndicator);
+    }
+}, 5000);
